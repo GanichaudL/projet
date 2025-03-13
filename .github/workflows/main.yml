@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Installation et Mise à Jour
+        run: sudo apt update && sudo apt install g++ cmake libboost-all-dev
+      - name: Compiler le serveur
+        run: g++ -o backend/server backend/server.cpp -lpthread -lboost_system
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-server
+          path: backend/server
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23.7.0'
+      - name: Installer Angular
+        run: npm install -g @angular/cli
+      - name: Installer les dépendances
+        run: cd frontend && npm install
+      - name: Vérifier que le projet Angular compile
+        run: cd frontend && ng build --configuration production
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-dist
+          path: frontend/dist
